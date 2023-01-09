@@ -4,10 +4,21 @@
     <Filter Include="Program">
       <UniqueIdentifier>{a568c2a2-fa2f-4a7b-b4a9-26c03e6dfcc8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Program\03_Library">
+      <UniqueIdentifier>{87af00f9-24dd-4a04-9799-5bc693abcaac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program\WinMain.cpp">
       <Filter>Program</Filter>
     </ClCompile>
+    <ClCompile Include="Program\03_Library\Input.cpp">
+      <Filter>Program\03_Library</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Program\03_Library\Input.h">
+      <Filter>Program\03_Library</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
