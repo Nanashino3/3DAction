@@ -14,6 +14,10 @@ LPDIRECTINPUTDEVICE8 Input::sMouse = NULL;
 HWND Input::sHwnd = NULL;
 
 BYTE Input::sKeyState[256] = {0};
+int Input::sKeyXorDown[256] = {0};
+int Input::sKeyTrgDown[256] = {0};
+int Input::sKeyXorRelease[256] = {0};
+int Input::sKeyTrgRelease[256] = {0};
 BYTE Input::sKeyList[static_cast<uint32_t>(Input::eKeys::KB_MAX)] = {
 	DIK_RETURN,	// エンター
 	DIK_SPACE,	// スペース
@@ -119,14 +123,29 @@ void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
 	}
 	sMouse->Acquire();
 	//******************************************************************
-
-
 }
 
 void Input::Update()
 {
 	memset(sKeyState, 0, sizeof(sKeyState));
 	sKeyboard->GetDeviceState(sizeof(sKeyState), &sKeyState);
+
+	memset(sKeyTrgDown, 0, sizeof(sKeyTrgDown));
+	memset(sKeyTrgRelease, 0, sizeof(sKeyTrgRelease));
+	for(uint32_t i = 0; i < static_cast<uint32_t>(Input::eKeys::KB_MAX); ++i){
+		if(0x80 & sKeyState[sKeyList[i]]){
+			// 0x00 xor 0x01 = 0x01, 0x01 xor 0x01 = 0x00
+			sKeyTrgDown[sKeyList[i]] = (sKeyXorDown[sKeyList[i]] ^ 0x01);
+			sKeyXorDown[sKeyList[i]] = 0x01;
+
+			sKeyXorRelease[sKeyList[i]] = 0;
+		}else{
+			sKeyXorDown[sKeyList[i]] = 0;
+
+			sKeyTrgRelease[sKeyList[i]] = (sKeyXorRelease[sKeyList[i]] ^ 0x01);
+			sKeyXorRelease[sKeyList[i]] = 0x01;
+		}
+	}
 
 	sMouse->GetDeviceState(sizeof(DIMOUSESTATE2), &sMouseState);
 }

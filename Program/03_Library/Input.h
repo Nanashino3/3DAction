@@ -77,10 +77,40 @@ public:
 	// 詳　細：
 	//******************************************************************
 	template <typename... tKeys>
-	static bool IsKeyDown(tKeys... param){
-		const eKeys array[] = { static_cast<eKeys>(param)... };
+	static bool IsKeyDown(tKeys... params){
+		const eKeys array[] = { static_cast<eKeys>(params)... };
 		for(eKeys elem : array){
 			if(0x80 & sKeyState[sKeyList[static_cast<uint32_t>(elem)]]){ return true; }
+		}
+		return false;
+	}
+
+	//******************************************************************
+	// 関数名：キーボード押下トリガー検出
+	// 引　数：arg1 検出したいキー(複数対応)
+	// 戻り値：true : 押下されている、false ： 押下されていない
+	// 詳　細：
+	//******************************************************************
+	template <typename... tKeys>
+	static bool IsKeyDownTrigger(tKeys... params){
+		const eKeys array[] = { static_cast<eKeys>(params)... };
+		for(eKeys elem : array){
+			if(0 != sKeyTrgDown[sKeyList[static_cast<uint32_t>(elem)]]){ return true; }
+		}
+		return false;
+	}
+
+	//******************************************************************
+	// 関数名：キーボード押下トリガー検出
+	// 引　数：arg1 検出したいキー(複数対応)
+	// 戻り値：true : 押下されている、false ： 押下されていない
+	// 詳　細：
+	//******************************************************************
+	template <typename... tKeys>
+	static bool IsKeyReleaseTrigger(tKeys... params){
+		const eKeys array[] = { static_cast<eKeys>(params)... };
+		for(eKeys elem : array){
+			if(0 != sKeyTrgRelease[sKeyList[static_cast<uint32_t>(elem)]]){ return true; }
 		}
 		return false;
 	}
@@ -92,8 +122,8 @@ public:
 	// 詳　細：
 	//******************************************************************
 	template <typename... tMouse>
-	static bool IsMouseDown(tMouse... param){
-		const eMouse array[] = { static_cast<eMouse>(param)... };
+	static bool IsMouseDown(tMouse... params){
+		const eMouse array[] = { static_cast<eMouse>(params)... };
 		for(eMouse elem : array){
 			if(0x80 & sMouseState.rgbButtons[static_cast<uint32_t>(elem)]){ return true; }
 		}
@@ -101,15 +131,22 @@ public:
 	}
 
 private:
+	// デバイス取得用変数
 	static LPDIRECTINPUT8 sInput;
 	static LPDIRECTINPUTDEVICE8 sKeyboard;
 	static LPDIRECTINPUTDEVICE8 sMouse;
 	static HWND sHwnd;
 
-	static BYTE sKeyState[256];											// 押下キー
-	static BYTE sKeyList[static_cast<uint32_t>(Input::eKeys::KB_MAX)];	// 対応リスト(キーボード)
-
+	// デバイス状態設定用変数
+	static BYTE sKeyState[256];			// 押下キー
+	static int sKeyXorDown[256];
+	static int sKeyTrgDown[256];
+	static int sKeyXorRelease[256];
+	static int sKeyTrgRelease[256];
 	static DIMOUSESTATE2 sMouseState;
+
+	// 対応リスト変数
+	static BYTE sKeyList[static_cast<uint32_t>(Input::eKeys::KB_MAX)];
 };
 
 using eKeys = tkl::Input::eKeys;
