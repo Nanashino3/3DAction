@@ -1,8 +1,8 @@
 //******************************************************************
 // ファイル名：Input(入力クラス)
 // 作　成　日：2023/01/10
+#include "../Expansion.h"
 #include "Input.h"
-
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
 
@@ -10,9 +10,10 @@ namespace tkl
 {
 LPDIRECTINPUT8 Input::sInput = NULL;
 LPDIRECTINPUTDEVICE8 Input::sKeyboard = NULL;
+LPDIRECTINPUTDEVICE8 Input::sMouse = NULL;
 HWND Input::sHwnd = NULL;
 
-BYTE Input::sKeyDwon[256] = {0};
+BYTE Input::sKeyState[256] = {0};
 BYTE Input::sKeyList[static_cast<uint32_t>(Input::eKeys::KB_MAX)] = {
 	DIK_RETURN,	// エンター
 	DIK_SPACE,	// スペース
@@ -50,6 +51,8 @@ BYTE Input::sKeyList[static_cast<uint32_t>(Input::eKeys::KB_MAX)] = {
 	DIK_Z
 };
 
+DIMOUSESTATE2 Input::sMouseState;
+
 void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
 {
 	sHwnd = hwnd;
@@ -59,7 +62,7 @@ void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
 	ret = DirectInput8Create(hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (LPVOID*)(&sInput), NULL);
 	if(FAILED(ret)){ return; }
 
-	//***********************************************************
+	//******************************************************************
 	// キーボード関連
 	ret = sInput->CreateDevice(GUID_SysKeyboard, &sKeyboard, NULL);
 	if(FAILED(ret)){
@@ -79,13 +82,53 @@ void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
 		return;
 	}
 	sKeyboard->Acquire();
-	//***********************************************************
+	//******************************************************************
+
+	//******************************************************************
+	// マウス関連
+	ret = sInput->CreateDevice(GUID_SysMouse, &sMouse, NULL);
+	if(FAILED(ret)){
+		sInput->Release();
+		return;
+	}
+	ret = sMouse->SetDataFormat(&c_dfDIMouse2);
+	if(FAILED(ret)){
+		sMouse->Release();
+		sInput->Release();
+		return;
+	}
+	ret = sMouse->SetCooperativeLevel(sHwnd, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
+	if(FAILED(ret)){
+		sMouse->Release();
+		sInput->Release();
+		return;
+	}
+	
+	// デバイスの設定 
+	DIPROPDWORD diprop;
+    diprop.diph.dwSize       = sizeof(DIPROPDWORD);
+    diprop.diph.dwHeaderSize = sizeof(DIPROPHEADER);
+    diprop.diph.dwObj        = 0;
+    diprop.diph.dwHow        = DIPH_DEVICE;
+    diprop.dwData            = DIPROPAXISMODE_REL;
+	ret = sMouse->SetProperty(DIPROP_AXISMODE, &diprop.diph);
+	if(FAILED(ret)){
+		sMouse->Release();
+		sInput->Release();
+		return;
+	}
+	sMouse->Acquire();
+	//******************************************************************
+
+
 }
 
 void Input::Update()
 {
-	memset(sKeyDwon, 0, sizeof(sKeyDwon));
-	sKeyboard->GetDeviceState(sizeof(sKeyDwon), &sKeyDwon);
+	memset(sKeyState, 0, sizeof(sKeyState));
+	sKeyboard->GetDeviceState(sizeof(sKeyState), &sKeyState);
+
+	sMouse->GetDeviceState(sizeof(DIMOUSESTATE2), &sMouseState);
 }
 
 void Input::Release()
